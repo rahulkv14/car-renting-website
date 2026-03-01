@@ -1,0 +1,34 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Clone Repo') {
+            steps {
+                git 'https://github.com/rahulkv14/car-renting-website.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t car-rental-app .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                docker stop car-container || true
+                docker rm car-container || true
+                docker run -d -p 3000:3000 --name car-container car-rental-app
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh 'curl -f http://localhost:3000 || exit 1'
+            }
+        }
+    }
+}
